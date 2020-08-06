@@ -1,4 +1,4 @@
-# bunny
+# The Bunny programming language
 
 DISCLAIMER: This effort is a work in progress, expect it to be faulty and incomplete :)
 

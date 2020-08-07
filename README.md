@@ -67,36 +67,145 @@ The following points form the "philosophy" of the Bunny language:
 
 Here is a longer snippet of Bunny code to illustrate a few key points:
 
-    # ? statt named params only function calls with fixed number of parameters and types:
-    vec a
-    vec b
-    vec c
+    #### basic vector arithmetic
+
+    # the following blocks are assumed to exist:
+    # - initialize a vector to a given length with zeros: @vec.0( vec v, int len -> vec r )
+    # - calculate vector sum of two vectors: @vec.sum( vec a, vec b -> vec r )
+
+    vec a, b, c # declare some vectors
+    vec.0 a len:2
+    vec.0 b 2 # second parameter "len" is also 0 as in previous example
+    vec.sum a b -> c # jump to block "vec.sum" and pass locals "a" and "b" into the block, block result "r" is written to local "c"
+    vec.sum( a b -> c ) # same just uses parenthesises
+    vec.sum a:a b:b -> r:c # same but explicitly sets input- and outputs via their name
+    vec.sum a . -> c # almost the same but second param "b" is ommitted (the block treats as a zero vector)
+    vec.sum a -> c # same as previous line
+    vec.sum a # almost the same as previous line but the result param "r" is not used
+    vec.sum . b -> c # another example of ommitting a parameter, this time input param "a" is ommitted
+    vec.sum . . -> c # b is ommitted as well
+    vec.sum -> c # same as previous line
+
+    #### block definition examples
+
+    # blocks are actually just top-level locations that can be jumped-to (they are not like go-to's though)
+    # a block has 0 or more input and output parameters
+    # input parameters are always read-only (pass-by-reference) while outputs are read-write (also passed by reference from caller scope)
+
+    # the block "f" is stored in the scope "" (this is a legal scope name)
+    # in this example the block does not take any input or output parameters
+    @f {} # does take neither input nor output parameters
+    @f( num x ) {} # only takes an input parameter "x" of type "num"
+    @f( -> num r ) {} # no inputs, only one output "r" of type "num"
+    @f( num x -> num r ) {} # input and output
+    @f( num x, num y .. ) {} # first param "x" and all the remaining params must be of type "int" and will be available as type "list"
+
+    # using the output parameter of a block as an input parameter for a another block
+    # (without having to store the output parameter in some local variable and then using the variable in the other block)
+    # assumes the following blocks:
+    #   - block "0" which writes zero to its result defined as: @0:( num r )
+    #   - block "num.sum" defined as: @num.sum( num a, num b ):( num r )
+    num r
+    num.sum \0 \0 -> r
+    # this can actually semantically similar be written as:
+    num r
+    num zero
+    0 -> zero
+    num.sum zero zero -> r
+
+    #### block implementation examples
+
+    # this block takes two single parameters and then a number of more parameters
+    @f( num x, num y, num rest .. -> num r ) {
+      print "x is " .str(x) "\n"
+      print "y is " .str(y) "\n"
+      # this shows how to access rest input parameters
+      map rest as:z idx:i {
+        print "rest[" .str(i) "] is " .str(z)
+      }
+    }
+    f 42 43 44 45 56
+
+    @vec.sum( vec a, vec b -> vec r ) {
+      # ensure vec a is larger than vec b:
+      and num.is_larger_than( a:vec.size(a), b:vec.size(b) ) -> any.swap( a b )
+
+      # for each element of vec a:
+      #   if vec b has an element: write sum of elem from a and b to same pos in vec r
+      #   else: write elem from a to vec r
+      multi-map l:vec.as-list( a )
+    }
+    vec a, b, c
     vec.sum a b -> c
-    # -> ommitted input/output parameters are marked as "."
 
-    # call a function "sum" that has two parameters typed "vec":
-    vec a        # allocates a value named "a" of type "vec"
-    vec b
-    !vec.0 v:a   # jump to scope "vec.0" and letting it access the input param "v" alias'ed to "a"
-                  # (this will initialize the vector "a" to zeros)
-    !vec.0 v:b   # jump to scope "vec.0" and letting it access the input param "v" alias'ed to "b"
-    vec sum
-    !vec.sum a:a b:b r:sum # jump to scope "vec.sum" and alias input/outputs beforehand
-    # now value behind "sum" contains the vector sum of the vectors behind "a" and "b"
+    #### conditional execution
 
-    # extend the scope "vec" by adding/redefining a new subscope "sub"
-    # the scope input and output parameters are defined
-    # input parameters are always read-only
-    # output parameters are always read-write
-    vec.sub ( vec a, vec b ):( vec r ) {
-      # scope contents
-      int8 i # ...
+    # the basic trick are the standard blocks ".and", ".not" and ".or" that take any number of inputs
+    # and based on their boolean meaning will evaluate their first result parameter
+    # the blocks definition are (the type "ast" is the type of any piece of unevaluated abstract syntax tree):
+    #   @and( bool value .. -> ast action )
+    #   @or( bool value .. -> ast action )
+    #   @not( bool value -> ast action )
+
+    # a decision table works as follows:
+    # - one or more conditions are evaluated (in any order) and the results are stored in local variables
+    # - based on one or more rules (a rule is a combination of condition results) certain outcomes are evaluated (in pre-defined order)
+    # the following "hand-codes" a decision table:
+    @outcome1 {}
+    @outcome2 {}
+    @outcome3 {}
+    {
+      bool c1, c2, c3
+      f1 -> c1
+      f2 -> c2
+      f3 -> c3
+      and c1 c2 c3 -> outcome1
+      and c1 c2 \not(c3) -> outcome2
+      not c3 -> outcome3
     }
 
-    # the scope "mod.f" takes an input parameter "s" that is itself a symbol
-    mod.f ( symbol s ):() {
-      # ...
-    }
+    #### fun with un-evaluated pieces of abstract syntax tree
+
+    # to evaluate any piece of abstract syntax tree, just use the block @eval, defined as: @eval:( ast r )
+    eval 42
+    eval f()
+    eval {}
+
+    #### literals
+
+    # the code examples above already illustrated a few literals, but there are some more
+    print 42 # literal of type "num.int"
+    print 42.4 # literal of type "num.real"
+    # ...
+
+    #### defined hierarchy of type names
+
+    # numeric types
+    #   num : any kind of numeric value
+    #   num.int : whole numbers, neg. and pos.
+    #   num.int0 : pos. whole numbers including 0
+    #   num.int1 : pos. whole numbers without 0
+    #   num.real : real whole numbers
+    #   ...
+
+    # C types
+    #   c.sint8 : C type 8 bit signed int
+    #   c.uint8 : C type 8 bit unsigned int
+    #   ...
+
+    # compound types
+    #   list : heterogenous list
+    #   seq : homogenous list
+    #   record : map with fixed keys
+    #   map : map with variable keys
+
+    # union/or/attged-union types (if bunch is only one other type this is essentially an alias-type)
+    #   any : can be any one of a bunch of other types
+
+
+
+
+
 
     # how numbers and strings are actually created
     char c

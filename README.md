@@ -7,7 +7,7 @@ Bunny code files have the ending "bun", for example "test.bun".
 The following snippet of Bunny code may give you a sense (it defines a function whose content is unknown which
 calculates the sum vector c of two vectors a and b):
 
-    vec.sum ( vec a, vec b ):( vec r ) {
+    @vec.sum( vec a, vec b -> vec r ) {
       # ... see below for the function contents ;)
     }
     vec a

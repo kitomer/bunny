@@ -103,8 +103,8 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     # using the output parameter of a block as an input parameter for a another block
     # (without having to store the output parameter in some local variable and then using the variable in the other block)
     # assumes the following blocks:
-    #   - block "0" which writes zero to its result defined as: @0:( num r )
-    #   - block "num.sum" defined as: @num.sum( num a, num b ):( num r )
+    #   - block "0" which writes zero to its result defined as: @0( -> num r )
+    #   - block "num.sum" defined as: @num.sum( num a, num b -> num r )
     num r
     num.sum \0 \0 -> r
     # this can actually semantically similar be written as:
@@ -166,10 +166,10 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
 
     #### fun with un-evaluated pieces of abstract syntax tree
 
-    # to evaluate any piece of abstract syntax tree, just use the block @eval, defined as: @eval:( ast r )
-    eval 42
-    eval f()
-    eval {}
+    # to evaluate any piece of abstract syntax tree, just use the block @eval, defined as: @eval( -> ast r )
+    eval -> 42
+    eval -> f()
+    eval -> {}
 
     #### literals
 

@@ -73,7 +73,7 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     # - initialize a vector to a given length with zeros: @vec.0( vec v, int len -> vec r )
     # - calculate vector sum of two vectors: @vec.sum( vec a, vec b -> vec r )
 
-    vec a, b, c # declare some vectors
+    vec a b c # declare some vectors
     vec.0 a len:2
     vec.0 b 2 # second parameter "len" is also 0 as in previous example
     vec.sum a b -> c # jump to block "vec.sum" and pass locals "a" and "b" into the block, block result "r" is written to local "c"
@@ -100,13 +100,18 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     @f( num x -> num r ) {} # input and output
     @f( num x, num y .. ) {} # first param "x" and all the remaining params must be of type "int" and will be available as type "list"
 
+    # When jumping to a block the If the result of a block jump is used inside another jump 
+    
+    							- Wenn ein Jump ein Resultat hat (koennen auch mehr als eins sein), so wird
+								der erste Resultat-Parameter auch der Wert des Jumps sein, z.B.
+
     # using the output parameter of a block as an input parameter for a another block
     # (without having to store the output parameter in some local variable and then using the variable in the other block)
     # assumes the following blocks:
     #   - block "0" which writes zero to its result defined as: @0( -> num r )
     #   - block "num.sum" defined as: @num.sum( num a, num b -> num r )
     num r
-    num.sum \0 \0 -> r
+    num.sum 0 0 -> r
     # this can actually semantically similar be written as:
     num r
     num zero
@@ -117,11 +122,11 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
 
     # this block takes two single parameters and then a number of more parameters
     @f( num x, num y, num rest .. -> num r ) {
-      print "x is " .str(x) "\n"
-      print "y is " .str(y) "\n"
+      print "x is " str(x) "\n"
+      print "y is " str(y) "\n"
       # this shows how to access rest input parameters
       map rest as:z idx:i {
-        print "rest[" .str(i) "] is " .str(z)
+        print "rest[" str(i) "] is " str(z)
       }
     }
     f 42 43 44 45 56
@@ -140,7 +145,7 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
 
     #### conditional execution
 
-    # the basic trick are the standard blocks ".and", ".not" and ".or" that take any number of inputs
+    # the basic trick are the standard blocks "and", "not" and "or" that take any number of inputs
     # and based on their boolean meaning will evaluate their first result parameter
     # the blocks definition are (the type "ast" is the type of any piece of unevaluated abstract syntax tree):
     #   @and( bool value .. -> ast action )
@@ -160,22 +165,22 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
       f2 -> c2
       f3 -> c3
       and c1 c2 c3 -> outcome1
-      and c1 c2 \not(c3) -> outcome2
+      and c1 c2 not(c3) -> outcome2
       not c3 -> outcome3
     }
 
     #### fun with un-evaluated pieces of abstract syntax tree
 
     # to evaluate any piece of abstract syntax tree, just use the block @eval, defined as: @eval( -> ast r )
-    eval -> 42
-    eval -> f()
-    eval -> {}
+    eval 42
+    eval f()
+    eval {}
 
     #### literals
-
-    # the code examples above already illustrated a few literals, but there are some more
-    print 42 # literal of type "num.int"
-    print 42.4 # literal of type "num.real"
+    
+    # actually literals are jumps as well with their first reuslt beeing the actual value of the literal
+    42     # defined as: @42( -> int r )
+    42.3   # defined as: @42( -> real r )
     # ...
 
     #### defined hierarchy of type names

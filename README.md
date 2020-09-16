@@ -37,8 +37,12 @@ just emerged recently in the form of the Bunny language.
 
 The following points form the "philosophy" of the Bunny language:
 
+- In general a Bunny program should be easy to read, understand and reason about and everything should be well-defined
+  so that there are no surprises (for example overflows, automatic coersion of types).
 - Every step of an algorithm is a function call, picked from a public or custom function library.
 - Programs describe how stuff is done, not how data is represented.
+- Programs should specify in great detail the boundaries in which code is supposed to function, and the
+  interpreter will check those boundaries by static analysis.
 
 ### Features worth mentioning
 
@@ -57,6 +61,8 @@ The following points form the "philosophy" of the Bunny language:
 - No closures.
 - All atomic types from C.
 - Labelled blocks (aka "functions") can be re-defined just like all other labelled "stuff".
+- Static analysis that ensures a function works on the full range of its specified parameter values in order
+  to create a good foundation to writing safety-critical programs.
 
 ### Parts of bunny
 
@@ -118,6 +124,10 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     0 -> zero
     num.sum zero zero -> r
 
+		# Ranges for Fkt.-Parameter... Syntax?
+		
+		# ...
+
     #### block implementation examples
 
     # this block takes two single parameters and then a number of more parameters
@@ -169,13 +179,6 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
       not c3 -> outcome3
     }
 
-    #### fun with un-evaluated pieces of abstract syntax tree
-
-    # to evaluate any piece of abstract syntax tree, just use the block @eval, defined as: @eval( -> ast r )
-    eval 42
-    eval f()
-    eval {}
-
     #### literals
     
     # actually literals are jumps as well with their first reuslt beeing the actual value of the literal
@@ -207,8 +210,64 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     # union/or/attged-union types (if bunch is only one other type this is essentially an alias-type)
     #   any : can be any one of a bunch of other types
 
+                  - NO ast/any types, NO eval/typecheck functions
+                  - NO lazy evaluation
+                  - Function call = Jump to a block
+                  - jeder Ausdruck (Fkt-Def., Var.-Def., Literal etc.) ist ein Function call!
+                      vec a b c
+                      42
+                      print 42 a
+                      print 0    # @0( -> int r )
+                  - function overloading: a function is uniquely defined by its NAME plus its parameters (IN- and OUTPUT!)
+                  - implement units (e.g. metric, physical) into Bunny program:
+                    - implement a unit as a separate data type (internally represented by a numeric atomic type)
+                      and impl. conversion function based on the type
+                  - keine anonymen lokalen Funktionen, alle Fkt. sind nach dem Erzeugen des ASTs bekannt
+                    -> ?? passt das zusammen mit der eval(ast) Funktion?
+                  - [Syntax?] integrierte Doku fuer Funktionen/Argumente/Variablen
+                  - alle "aeusseren" Einfluesse auf ein Bunny-Programm werden auf Funktions-Aufrufe gemapped
+                    - die API eines Programms (= Kommandozeile Parameter/Argumente) ist als Funktion im Bunny Programm abbildbar;
+                      - die embedded lib mapped die Befehlszeile auf eine entspr. Bunny-Fkt. ab
+                      - ebenso eine URL (zB wenn man eine Webserver-URL/Path auf ein Bunny-Programm abbilden moechte)
+                    - OS-Interrupts
+                    - HID-Events
+                  - Ueberschreiben einer Fkt. = Error des Interpreters!
+                  - function calling:
+                    - Ergebnis eines Function calls ist immer der erste result parameter, zusaetzlich koennen alle result parameter explizit
+                      an locals des AUFRUF-Scopes zugewiesen werden
+                      -> Wenn eine Fkt. aufgerufen wird, werden deren locals allokiert und bei Beenden der Fkt. freigegeben
+                      -> Result parameter gehen immer von AUSSEN rein!
+                      -> wird eine Fkt. aufgerufen ohne dass die/der Result parameter explizit zugewiesen wird, wird
+                        im AUFRUF-Scope eine implizite Variable allokiert und zugewiesen
+                    - Wenn kein expliziter Result parameter vorh., wird Result parameter "void r" implizit verwendet
+                      -> ? ggf. meckern, so dass er explizit angegeben wird!
+                    - Eine Fkt. entscheidet darueber, ob ihre Parameter evaluiert oder unevaluiert uebergeben werden
+                      -> alle Parametertypen von ast.* sind autom. NICHT evaluiert (keine spezielle Markierung der Parameter notwendig!)
+                      -> es gibt Typen zB ast.name etc. aber auch ast.type.TYPE fuer jeden Custom-Typ, so
+                        dass man einfach un-evaluierte aber typ-gecheckte Werte erwarten kann
+                  - declare new types: not explicitly, only be using a type in a function definition!
+                  - Werte von Typ A nach Typ B transformieren: immer explizit ueber vordef. Fkt. oder eigene Fkt.
+                    (geschieht niemals automatisch!)
 
 
+                - parallel processing:
+                  - the embedded Bunny interpreter (aka the function that evaluates an ast typed value) is able to
+                    evaluate multiple ast's in parallel
+                  - parallel running evaluations can send messages to each using message queues
+                  - the priority of an evaluation can be set along with the parameters to "eval"
+
+                - safe atomic types:
+                  - [Syntax?]
+                    the types are _derived_ from C but more precisely defined:
+                    - overflow behaviour is specified as an option to the operation
+                    - if overflow is allowed to happen it must be handled, checked by interpreter!
+
+                - there are mechanisms builtin to
+                  - sync n processes at a given point in code and be able to control all of the processes
+                  - send messages between n processes: each process has a message queue that is to be
+                    processed (the "main loop" has to be implemented in the program manually)
+                  - share resources: actually no resource is ever shared, instead what is done:
+                      resource is copied -> changes are made -> the changed copy is appended to the resources history
 
 
 
@@ -219,6 +278,10 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     num.42 r:answer # "num.42" will write the letter 42 to the output parameter r
     string s
     string.append c:c s:s # "string.append" will append the character c to the string s (modifies s)
+
+In the future it might be useful to specify the Bunny language in the form of
+type inference rules (s. https://www.cs.princeton.edu/courses/archive/spring12/cos320/typing.pdf) in order to
+make it possible to apply mathematical methods for reasoning about Bunnys type system.
 
 ### Fundamental language constructs (stuff the AST is made of):
 
@@ -288,6 +351,28 @@ The specific library of Bunny is organized this way:
 
 - The Bunny C library.
 
+                  - every lexical variable is implemented as a statically allocated array of values
+                    (plus a current counter (= current length of array)), each array-value beeing used inside the callstack
+                    -> if the interpreter runs out of memory, it will stop OR allocate more using dynamic malloc
+                    -> dynamic memory allocation can be turned off
+                  - each function is brute-force tested given its parameter value range (apply "all" combination of allowed values)
+                    (in sensible limits)
+                  - software quality measurement detection (function length, complexity etc.)
+                  - static analysis of code
+                  - ability to limit the stack size (how deep the function call tree may be at any time)
+                  - when the value of a variable is checked, ALL values of that type need to be checked
+                    -> may be simplified by checking ranges of values!
+                    -> also for or-types (e.g. error results: all kinds of errors must be checked explicitly)
+                  - Variablen sind immer read-write
+                    - eine Variable ist ein typisierter Eintrag im aktuellen Scope
+                    - die Syntax fuer den Scope ist { ... }
+                    - ?? Var.-Definition analog zu JUMP-Def.? Bsp.
+                        @vec a        # defines var a
+                        @vec.sum() {} # defines jump vec.sum
+                    - eine Variablen-Deklaration ist ebenfalls ein Function call: @TYPE( ast.name name .. )
+                        vec a b c
+                    - Konstanten koennen zB durch JUMPs erzeugt werden, die immer denselben Result-Parameter haben
+
 ### Runner level
 
 The runner level defines the interface to the C library towards a program that runs/evaluates the actual Bunny program code.
@@ -315,6 +400,92 @@ The user level defines the interface of a Bunny software towards a user of the p
 - How to run a standalone executable
 - How to use the HTTP api of the service daemon to run code
 
+### Process level
+
+The process level defines a software development process that leads towards a working Bunny program.
+The specified process is scalable from a single developer to a multi-maintainer team.
+
+For ideas on that topic, s. https://www.fastcompany.com/28121/they-write-right-stuff
+
+#### Process goals and priorities
+
+The three goals, time, cost and quality are priotized in this order:
+
+1. Quality (the higher the better)
+2. Time (the shorter the better)
+3. Cost (the cheaper the better)
+
+The reasoning behind that is:
+
+- Quality is the highest priority because a malfunctioning system will backfire in the future.
+- Time and cost are closely related as it is often possible to reduce time while increasing cost.
+  In case you are able to choose between time and cost, time should be reduced as much as
+  possible to yield results faster as they can be used sooner.
+- Cost always has a limit so at any time, all the money should be awarded into
+  reaching a high-quality result as fast as possible. In the lucky case when you can choose between two
+  equal solutions, choose the cheaper one because choosing the more expensive one would not gain anything.
+
+#### Main principles of the process:
+
+- Be as simple as possible:
+  - Have as few different roles as possible.
+  - Have as few different activities as possible.
+  - Have as few different artefacts as possible.
+- Be as automatable as possible.
+- Be as strict and exact as possible.
+- All activity is documented.
+- Every purpose of activity is documented.
+- Based on computer-readable definitions (not documents/diagrams/checklists)
+	so as to easily automate parts of the process.
+- Clear takeover chain in cases people are missing.
+
+#### Process activities:
+
+- Specification: The act of defining the goal of an artefact (e.g. a (piece of) program).
+- Development: The act of writing/modifying an artefact (e.g. a piece of code) towards a specification.
+- Validation: The act of matching the specification with the developed artefact (e.g. program) to ensure consistency.
+
+#### Targets for activities:
+
+- Program code.
+- Process definition.
+- Additional artefacts, like documents, websites etc.
+
+#### Process implementation on GitHub
+
+All artefacts, specifications and validation results are kept inside a GitHub repository.
+
+##### Specification:
+
+Form: In the form of a directory in the repositories
+
+Contains:
+
+- A description behind the purpose of the specification.
+- A description of the specification as exact/formal as possible.
+
+? how ensure that the specification matches its purpose ?
+  -> have a machine-readable description of the specification items (semantically)
+
+##### Development:
+
+- A reference to one or more specifications that define the goal of the development.
+- A description of the changes made for implementing the referenced specifications.
+
+? how ensure that all stuff that was specified was developed ?
+  -> have a machine-readable description of the changes (semantically) referencing the specification
+
+##### Validation:
+
+- A reference to one or more developments that are beeing validated.
+- A detailed result of the validation that lists for every specification item whether it
+  is consistent with the developed result.
+
+? how ensure that all stuff that was specified was developed ?
+? how ensure that all stuff that is beeing developed was validated ?
+  -> have a machine-readable description of the validation result
+  -> match spec with dev and val. results
+  
 #### Specific implementation efforts
 
 - [NAME/LINK]: a web-based IDE using the Bunny JavaScript bindings.
@@ -333,6 +504,13 @@ including:
 # Roadmap
 
 - Write the language spec and implement the C library in a timely manner.
+  1. Write c file with typedefs for lang constructs and parse() func to turn char* into language construct
+  2. Write func to run language construct
+  3. Compile as c library
+  4. Small c cmdline prog link lib, read input file, compile program as standalone exe
+  5. Small c http server (libmicrohttpd) embed c lib, run code via http
+  6. Compile lib to js with WASM compiler
+  7. Small js wrapper to use WASM lib to run code in browser or using c server
 - Write the platform specs afterwards.
 - Realize some of the specific platform implementations.
 
@@ -346,3 +524,4 @@ including:
 
 - Give valuable comments and inputs on the Roadmap items.
 - Read through the files in this Github repository and create issues.
+              

@@ -269,8 +269,22 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
                   - share resources: actually no resource is ever shared, instead what is done:
                       resource is copied -> changes are made -> the changed copy is appended to the resources history
 
-
-
+              - auto-merging sw code non-semantically is not really robust!
+                -> Bunny INCLUDES functionality to COMBINE two segments of CODE semantically
+                -> this can be used in source-code-management tools to manage Bunny source files or inject
+                  changes from other people
+                -> the Bunny cmdline tool extends this to work with MULTIPLE files and DEEP directories!
+              - integrate ways of elaborate documentation that is actually _part_ of the language (meaning it is parsed and
+                can be extracted/analyzed)
+                -> may replace/help issue (bug/todo/note) tracking
+                -> may be used to generate readable documentation (which may include some code)
+                -> get some hints on how to do that from Literate Programming
+                --- rules
+                - so-called notes can be added to sources
+                - there are certain predefined kinds of notes
+                - a note always refers to the direct ast-thing after itself
+                - a note looks similar to a comment
+		
     # how numbers and strings are actually created
     char c
     char.letter.a r:c # "char.letter.a" will write the letter a to the output parameter r

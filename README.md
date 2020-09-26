@@ -452,12 +452,16 @@ The reasoning behind that is:
 - Based on computer-readable definitions (not documents/diagrams/checklists)
 	so as to easily automate parts of the process.
 - Clear takeover chain in cases people are missing.
+- no standups (fixed regular meetings)
+- only work on stuff that matters = stuff that is visible AND must be done
+- live-deployable code without downtime is the standard!
 
 #### Process activities:
 
 - Specification: The act of defining the goal of an artefact (e.g. a (piece of) program).
 - Development: The act of writing/modifying an artefact (e.g. a piece of code) towards a specification.
 - Validation: The act of matching the specification with the developed artefact (e.g. program) to ensure consistency.
+- Deployment: ...
 
 #### Targets for activities:
 

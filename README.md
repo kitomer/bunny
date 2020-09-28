@@ -403,6 +403,8 @@ The runner level defines the interface to the C library towards a program that r
 #### Specific implementation efforts
 
 - [NAME/LINK]: A C-based commandline program.
+  - is able to modify sources as to record semantic changes to existing code, e.g.
+    "rename function x to y" instead of just modifying the source files!
 - [NAME/LINK]: A C-based service daemon.
 - [NAME/LINK]: JavaScript bindings for the service daemon or in-browser WASM-C-library (compiled to WASM from the C library).
 

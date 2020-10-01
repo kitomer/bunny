@@ -297,6 +297,14 @@ In the future it might be useful to specify the Bunny language in the form of
 type inference rules (s. https://www.cs.princeton.edu/courses/archive/spring12/cos320/typing.pdf) in order to
 make it possible to apply mathematical methods for reasoning about Bunnys type system.
 
+- a Bunny program is conceptually always single-thread/single-process, as lightweight as possible
+  (also mostly statically allocated memory)
+- memory model:
+  - no global variables, only function-local variables
+  - by default each function variable is implemented as an ARRAY so to have one data value
+    per function call, but this can be overriden to allow "static" variables, which access the same value
+    for every time the function is called (jumped to)
+
 ### Fundamental language constructs (stuff the AST is made of):
 
 The following "things" in Bunny are the stuff that make up the AST (abstract syntax tree) when Bunny code is parsed:
@@ -399,6 +407,23 @@ The runner level defines the interface to the C library towards a program that r
 - How to use the JavaScript wrapper which can either use:
   - The service daemon (all code is then run by the service daemon).
   - A WASM-compiled commandline runner (all code is then run inside the browser).
+
+- all external events/triggers/messages are put into a queue that can be accessed by a Bunny program
+- other Bunny program runners can be contacted/monitored (local and remote) using a few builtin functions
+- inter-runner messages can have a few meta infos attached, e.g. sender runner ID
+- the inter-runner communication protocol is specified based on various technologies for local and remote runners:
+  - HTTP(s) based (for communicating)
+  - local ??
+- it is not possible to start a remote runner, so it is advised (in distributed runner setups) that one runner
+  is started on system startup which then starts the actual runners (possibly after receiving remote messages to do so)
+- there is a builtin function that instructs the runner to restart itself making it possible to
+  switch to a new version of a Bunny program if the sources changed since the previous runner start
+- the runner can be instructed to submit a message should the Bunny program crash in order to signal its
+  crash to other Bunny programs (maybe the parent)
+- the usual philosophy is to be very liberal about crashing programs (let them crash) but also let them be
+  easily monitored and restart. the runner can be instructed to restart a Bunny program on failure
+- ? the runner spawns by default making it a default-to-demon program that controls the execution of the
+  Bunny code it runs
 
 #### Specific implementation efforts
 

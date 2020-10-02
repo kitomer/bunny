@@ -482,6 +482,11 @@ The reasoning behind that is:
 - no standups (fixed regular meetings)
 - only work on stuff that matters = stuff that is visible AND must be done
 - live-deployable code without downtime is the standard!
+- there are no "projects" (because it is always a unproductive waste of time to discuss what is
+  a project, what is a module etc.), there is just the "thing" everyone is working on
+- there is no formal chain of steps that need to be run through, a work package is simply
+  handed from person to person that does certain things (skill/action-based steps) where
+  each step can be done by multiple people (separately or simultaneously) as well as multiple times
 
 #### Process activities:
 

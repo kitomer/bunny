@@ -293,6 +293,125 @@ Here is a longer snippet of Bunny code to illustrate a few key points:
     string s
     string.append c:c s:s # "string.append" will append the character c to the string s (modifies s)
 
+              - literals are always parsed and not imedietly TYPED; they get the type
+                  in which context they are beeing used (the interpreter does not _try_ to coerce them much);
+                  these literals exist with their corresponding _allowed_ context builtin types:
+                  
+                    <literal>               : let the interpreter decide the type (generates warning for most coercions!)
+                    <literal>~<typename>    : explicitly define the target type (generates warning on slightest mismatch)
+
+                  literal syntax for basic types:
+                    42    : numeric types
+                    42.3  : same
+                    1/3   : ?
+                    ...
+                    
+                  literal syntax for compound types:
+                    [ x, y, z ] : list
+                    { 0:x, 1:y, abc:z } : record
+                    < 0:x, 1:y, 2:z > : map
+                    
+              - Wie lange tief verschachtelte if/else Konstrukte kompakt und leicht verstaendlich schreiben?
+                  -> in Bunny this can not be written at all, so a decision-tabke-similar code layout is preferred, e.g.
+                    and c1 c2 c3 -> outcome1
+                    and c1 c2 not(c3) -> outcome2
+                    not c3 -> outcome3                
+              
+                  
+              - builtin-Typen sind NICHT-hierarchisch damit es moegl. KURZE Namen sind!
+              
+                - numeric types
+                  -> these have the following options:
+                        min (same type as numeric)
+                        max (same type as numeric)
+                        step (same type as numeric)
+                        init (initial value)
+                  - math based
+                      num : whole numbers, neg. and pos.
+                      real : real whole numbers
+                      ...
+                  - C (computer) based
+                      sint8 : C type 8 bit signed int
+                      uint8 : C type 8 bit unsigned int
+                      ...
+                      
+                - alias type:
+                    alias : an alias type for another type
+                      options:
+                        base (typename of alias'ed type)
+                        
+                - compound types
+                  -> it is NOT possible to create recursive types ("list of list of num"), you have to define
+                      intermediate types to use them
+                  -> in the end all types have to be derived from the builtin set of types
+                  -> note: no heterogenous list type is needed, because you can simply create a map type
+                      with numeric-keys and use that for heterogenous values
+                  
+                    list : homogenous list
+                      options:
+                        of (typename of element type)
+                        minlen (num or c-based whole-number type)
+                        maxlen (same)
+                        <all options from element type>
+                    record : map with fixed keys
+                      options:
+                        key-<keyname> (typename for key)
+                        default-<keyname> (default value for key)
+                    map : map with variable keys
+                        key-type (typename for keys)
+                        value-type (typename for values)
+                        max-keys (max number of keys)
+                        
+                - union/or/attged-union types (if bunch is only one other type this is essentially an alias-type)
+                    any : can be any one of a bunch of other types
+
+              - ? Syntax um Variablen mit Compound-Typen zu deklarieren und zu verwenden?
+
+                  # simple typed variables with mandatory limits (options)
+                  @x num min:0 max:20 step:1
+                  
+                  # compound typed variables have the options of their element type plus additional options
+                  # (no nameclash between element type options and compound type options are allowed!)
+                  @x list of:num min:0 max:20 minlen:0 maxlen:100
+                  
+                  @f (){}
+
+              - library level https://slembcke.github.io/2020/10/12/CustomAllocators.html
+
+              - Builtin functions:
+                - @map( list a, function f -> list r )
+                - @grep( list a, function f -> list r )
+                - @concat( ... )
+                - @unique( ... )
+                - @sort( ... )
+                - @reduce
+                --- more s.b.
+                - https://timelydataflow.github.io/differential-dataflow/introduction.html
+                  The map operator applies a supplied function to each element of a collection, the results 
+                    of which are accumulated into a new collection.
+                  The filter operator applies a supplied predicate to each element of a collection, and retains 
+                    only those for which the predicate returns true.
+                  The concat operator takes two collections whose element have the same type, and produces the 
+                    collection in which the counts of each element are added together.
+                  The consolidate operator takes an input collection, and does nothing other than possibly 
+                    changing its physical representation. It leaves the same sets of elements at the same times with the same logical counts.
+                    What consolidate does do is ensure that each element at each time has at most one physical tuple.
+                    Generally, we might have multiple updates to the same element at the same time, expressed as 
+                    independent updates. The consolidate operator adds all of these updates together before moving the update along.
+                  The join operator takes two input collections, each of which must have records with a (key, value) 
+                    structure, and must have the same type of key. For each pair of elements with matching key, one from 
+                    each input, the join operator produces the output (key, (value1, value2)).
+                  The reduce operator takes an input collection whose records have a (key, value) structure, and it 
+                    applies a user-supplied reduction closure to each group of values with the same key.
+                  The iterate operator takes a starting input collection and a closure to repeatedly apply to this input 
+                    collection. The output of the iterate operator is the collection that results from an unbounded number 
+                    of applications of this closure to the input. Ideally this process converges, as otherwise the computation will run forever!
+                  The arrange operator is a massively important operator that we will discuss in more detail in the 
+                    chapter on Arrangements. Arrange controls and coordinates how data are stored, indexed, and maintained, 
+                    and forms the basis of efficient data sharing.
+                    Operators like consolidate, join, and reduce all use arrange internally, and there can be substantial 
+                    benefit to exposing this use. We will discuss this further.
+
 In the future it might be useful to specify the Bunny language in the form of
 type inference rules (s. https://www.cs.princeton.edu/courses/archive/spring12/cos320/typing.pdf) in order to
 make it possible to apply mathematical methods for reasoning about Bunnys type system.

@@ -23,6 +23,30 @@ sums up two numbers of a user-defined type:
 
 Instable. Do not use.
 
+## Table of Contents
+
+* [Motivation](#mot)
+* [Features worth mentioning](#feat)
+* [Parts of bunny](#parts)
+* [Language spec](#lang)
+* [A Bunny program](#prog)
+* [Files](*files)
+* [Type declarations](#types)
+* [Function definitions](#funcs)
+* [Typed values: variables](#vars)
+* [Expressions: Function calls, symbols and literals](#expr)
+* [More syntax](#syntax)
+* [Builtin functions with lazy evaluation](#lazy)
+* [Library level](#lib)
+* [Runner level](#run)
+* [User level](#use)
+* [Process level](#proc)
+* [Deployment level](#depl)
+* [Roadmap](#road)
+* [Organization](#org)
+
+<a name="mot"/>
+
 ## Motivation
 
 Bunny tries to combine three major characteristics of other programming languages I heavily used with pleasure into a single new language.
@@ -49,6 +73,8 @@ Using some common terminology to describe the Bunny language and type system:
 - Statically typed: Every "thing" is declared to be of an explicit type once and that notion may never change.
   Also no values are implicitly coerced from type A to type B.
 
+<a name="feat"/>
+
 ## Features worth mentioning
 
 - What is in other languages a "function", "module" or "variable" is in Bunny just a labelled block of one or more typed values.
@@ -69,12 +95,18 @@ Using some common terminology to describe the Bunny language and type system:
 - Static analysis that ensures a function works on the full range of its specified parameter values in order
   to create a good foundation to writing safety-critical programs.
 
+<a name="parts"/>
+
 ## Parts of bunny
 
 - Language spec: This defines the syntax and semantics of the language code.
 - Platform spec: How/where Bunny code/files can be used/run.
 
+<a name="lang"/>
+
 ## Language spec
+
+<a name="prog"/>
 
 ### A Bunny program
 
@@ -99,6 +131,8 @@ At last an entry point for the interpreter is defined as the function "main" whi
 type, calls the defined function and generates a side effect, the printing of the calculated sum to
 the standard output of the program process.
 
+<a name="files"/>
+
 ### Files
 
 The Bunny language does not concern itself with the concept of a "file", but by convention Bunny code comes 
@@ -109,6 +143,8 @@ Since the language itself is not aware that its code (most often) resides inside
 to "include" or "load" code from within a Bunny program. (Note: If you really wanted to you could of course
 extend the interpreter with a Bunny builtin function that would call the very interpreter itself and that
 way create a kind of "eval" function ... which completely destroys most compile-time type-checking ;))
+
+<a name="types"/>
 
 ### Type declarations
 
@@ -244,6 +280,8 @@ The symbol type plays a special role as literals can be of that type but it cann
 base for custom types. Also a few builtin functions take parameters of type "symbol". Furthermore
 values of certain type options are of type "symbol". 
     
+<a name="funcs"/>
+
 ### Function definitions
 
     sub f {} # does take neither input nor output parameters
@@ -262,6 +300,8 @@ name-prefixes, s.b. (because then they do not have the same full name).
 
 Functions may be used before they are known to the parser.
     
+<a name="vars"/>
+
 ### Typed values: variables
 
 Variables can be declared in function-scope and always have a specific fixed type (that may never change).
@@ -272,6 +312,8 @@ For example:
       uint64 j = 42
       io.say "i = " i ", j = " j
     }
+
+<a name="expr"/>
 
 ### Expressions: Function calls, symbols and literals
 
@@ -348,6 +390,8 @@ interpretation of the whole program. The generic syntax for literals:
     
 This does never happen implicitly but needs to be done by the user.
     
+<a name="syntax"/>
+
 ### More syntax
     
 #### Comments and documentation
@@ -400,6 +444,8 @@ functions with that name (with different signature).
 
     sub f = date.sum
     type t = date.date
+
+<a name="lazy"/>
 
 ### Builtin functions with lazy evaluation
 
@@ -500,6 +546,8 @@ make it possible to apply mathematical methods for reasoning about Bunnys type s
 
 The platform architecture is organized in levels which are:
 
+<a name="lib"/>
+
 ### Library level
 
 The library level defines how the basic language constructs are organized/implemented:
@@ -589,6 +637,8 @@ Raw notes to be integrated into this document:
       - share resources: actually no resource is ever shared, instead what is done:
           resource is copied -> changes are made -> the changed copy is appended to the resources history
 
+<a name="run"/>
+
 ### Runner level
 
 The runner level defines the interface to the C library towards a program that runs/evaluates the actual Bunny program code.
@@ -627,6 +677,8 @@ The runner level defines the interface to the C library towards a program that r
 - [NAME/LINK]: A C-based service daemon.
 - [NAME/LINK]: JavaScript bindings for the service daemon or in-browser WASM-C-library (compiled to WASM from the C library).
 
+<a name="use"/>
+
 ### User level
 
 The user level defines the interface of a Bunny software towards a user of the program, including:
@@ -634,6 +686,8 @@ The user level defines the interface of a Bunny software towards a user of the p
 - How to run a program using the commandline runner
 - How to run a standalone executable
 - How to use the HTTP api of the service daemon to run code
+
+<a name="proc"/>
 
 ### Process level
 
@@ -735,6 +789,8 @@ Contains:
 - [NAME/LINK]: a web-based IDE using the Bunny JavaScript bindings.
 - Example programs compiled as standalone executable. These can be found [LINK].
 
+<a name="depl"/>
+
 ### Deployment level
 
 The deployment level defines everything that is needed to distribute artefacts of Bunny software,
@@ -745,7 +801,9 @@ including:
 - Automatic deployment chains to distribution package repositories
 - Interpreter integrations for other languages such as Lua/Openresty
 
-# Roadmap
+<a name="road"/>
+
+## Roadmap
 
 - Write the language spec and implement the C library in a timely manner.
   1. Write c file with typedefs for lang constructs and parse() func to turn char* into language construct
@@ -757,6 +815,8 @@ including:
   7. Small js wrapper to use WASM lib to run code in browser or using c server
 - Write the platform specs afterwards.
 - Realize some of the specific platform implementations.
+
+<a name="org"/>
 
 ## Organization
 

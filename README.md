@@ -299,7 +299,19 @@ Probably obvious, but two functions with the same name (not full name) and same 
 name-prefixes, s.b. (because then they do not have the same full name).
 
 Functions may be used before they are known to the parser.
-    
+
+Raw notes to be intergrated into this paragraph:
+
+            2 @Bunny/README.md @Functions: Wie kann man eine Api aus Fkt.-Signaturen definieren, ohne die Def. der Datentypen INTERN und Fkt.-Def.?
+              - Fkt. OHNE Body -> duerfen _einmal_ ueberschrieben werden, bspw.
+                  sub f( int a -> int b )
+                  # ...
+                  sub f( int a -> int b ) { b = 42 }
+              - Builtin-Fkt. um atomare Daten zu transformieren, zB Zugriff auf Bytes/Bits/etc., nur Transf.
+                zw. BUILTIN-Typen !
+              - quasi eine Api-Datei mit den reinen Signaturen der Fkt. 
+                + separate Datei mit den Fkt.-Bodies und Datentyp-DEFINITIONEN                          
+
 <a name="vars"/>
 
 ### Typed values: variables
